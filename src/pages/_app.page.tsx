@@ -8,7 +8,6 @@ const roboto = Roboto({
   subsets: ['latin'],
 })
 
-
 globalStyles()
 
 export default function App({ Component, pageProps }: AppProps) {
