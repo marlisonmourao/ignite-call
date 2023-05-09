@@ -21,6 +21,7 @@ import {
   FormError,
 } from './styles'
 import { z } from 'zod'
+import { converTimerStringInMinutes } from '@/utils/convert-timer-string-to-minutes'
 
 const TimeIntervalsFormSchema = z.object({
   intervals: z
@@ -36,10 +37,33 @@ const TimeIntervalsFormSchema = z.object({
     .transform((intervals) => intervals.filter((interval) => interval.enabled))
     .refine((intervals) => intervals.length > 0, {
       message: 'Você precisa selecionar pelo menos um dia da semana,',
-    }),
+    })
+    .transform((intervals) => {
+      return intervals.map((interval) => {
+        return {
+          weekDay: interval.weekDay,
+          startTimeInMinutes: converTimerStringInMinutes(interval.startTime),
+          endTimeInMinutes: converTimerStringInMinutes(interval.endTime),
+        }
+      })
+    })
+    .refine(
+      (intervals) => {
+        return intervals.every(
+          (interval) =>
+            interval.endTimeInMinutes - 60 >= interval.startTimeInMinutes,
+        )
+      },
+      {
+        message:
+          'O hórario de término deve ser pelo menos 1h distante do início',
+      },
+    ),
 })
 
-type TimerIntervalsFormData = z.infer<typeof TimeIntervalsFormSchema>
+type IntervalsFormInput = z.input<typeof TimeIntervalsFormSchema>
+
+type TimerIntervalsFormOutput = z.output<typeof TimeIntervalsFormSchema>
 
 export default function TimeIntervals() {
   const {
@@ -48,7 +72,7 @@ export default function TimeIntervals() {
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm({
+  } = useForm<IntervalsFormInput>({
     resolver: zodResolver(TimeIntervalsFormSchema),
     defaultValues: {
       intervals: [
@@ -72,8 +96,9 @@ export default function TimeIntervals() {
     name: 'intervals',
   })
 
-  async function handleSetTimeIntervals(data: TimerIntervalsFormData) {
-    console.log(data)
+  async function handleSetTimeIntervals(data: any) {
+    const formData = data as TimerIntervalsFormOutput
+    console.log(formData)
   }
 
   return (
