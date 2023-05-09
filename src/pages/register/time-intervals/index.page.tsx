@@ -1,3 +1,7 @@
+import { Controller, useFieldArray, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { ArrowRight } from 'phosphor-react'
+import { getWeekDays } from '@/utils/get-week-days'
 import {
   Button,
   Checkbox,
@@ -14,21 +18,38 @@ import {
   IntervalDay,
   IntervalInputs,
   IntervalItem,
+  FormError,
 } from './styles'
-import { ArrowRight } from 'phosphor-react'
-import { useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { getWeekDays } from '@/utils/get-week-days'
 
-const TimeIntervalsFormSchema = z.object({})
+const TimeIntervalsFormSchema = z.object({
+  intervals: z
+    .array(
+      z.object({
+        weekDay: z.number().min(0).max(6),
+        enabled: z.boolean(),
+        startTime: z.string(),
+        endTime: z.string(),
+      }),
+    )
+    .length(7)
+    .transform((intervals) => intervals.filter((interval) => interval.enabled))
+    .refine((intervals) => intervals.length > 0, {
+      message: 'Você precisa selecionar pelo menos um dia da semana,',
+    }),
+})
+
+type TimerIntervalsFormData = z.infer<typeof TimeIntervalsFormSchema>
 
 export default function TimeIntervals() {
   const {
     register,
     control,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
+    resolver: zodResolver(TimeIntervalsFormSchema),
     defaultValues: {
       intervals: [
         { weekDay: 0, enabled: false, startTime: '08:00', endTime: '18:00' },
@@ -37,19 +58,23 @@ export default function TimeIntervals() {
         { weekDay: 3, enabled: true, startTime: '08:00', endTime: '18:00' },
         { weekDay: 4, enabled: true, startTime: '08:00', endTime: '18:00' },
         { weekDay: 5, enabled: true, startTime: '08:00', endTime: '18:00' },
-        { weekDay: 6, enabled: true, startTime: '08:00', endTime: '18:00' },
+        { weekDay: 6, enabled: false, startTime: '08:00', endTime: '18:00' },
       ],
     },
   })
 
   const weekDay = getWeekDays()
 
+  const intervals = watch('intervals')
+
   const { fields } = useFieldArray({
     control,
     name: 'intervals',
   })
 
-  async function handleSetTimeIntervals() {}
+  async function handleSetTimeIntervals(data: TimerIntervalsFormData) {
+    console.log(data)
+  }
 
   return (
     <Container>
@@ -69,7 +94,21 @@ export default function TimeIntervals() {
             return (
               <IntervalItem key={field.id}>
                 <IntervalDay>
-                  <Checkbox />
+                  <Controller
+                    name={`intervals.${index}.enabled`}
+                    control={control}
+                    render={({ field }) => {
+                      return (
+                        <Checkbox
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked === true)
+                          }}
+                          checked={field.value}
+                        />
+                      )
+                    }}
+                  />
+
                   <Text>{weekDay[field.weekDay]}</Text>
                 </IntervalDay>
                 <IntervalInputs>
@@ -77,12 +116,14 @@ export default function TimeIntervals() {
                     size="sm"
                     type="time"
                     step={60}
+                    disabled={intervals[index].enabled === false}
                     {...register(`intervals.${index}.startTime`)}
                   />
                   <TextInput
                     size="sm"
                     type="time"
                     step={60}
+                    disabled={intervals[index].enabled === false}
                     {...register(`intervals.${index}.endTime`)}
                   />
                 </IntervalInputs>
@@ -91,7 +132,11 @@ export default function TimeIntervals() {
           })}
         </IntervalContainer>
 
-        <Button>
+        {errors.intervals && (
+          <FormError size="sm">{errors.intervals.message}</FormError>
+        )}
+
+        <Button disabled={isSubmitting}>
           Próximo passo
           <ArrowRight />
         </Button>
