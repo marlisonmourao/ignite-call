@@ -6,7 +6,7 @@ import { ConnectBox, ConnectItem } from './styles'
 import { AuthError, Container, Header } from '../styles'
 import { useRouter } from 'next/router'
 
-export default function Register() {
+export default function ConnecteCalendar() {
   const session = useSession()
   const router = useRouter()
 
