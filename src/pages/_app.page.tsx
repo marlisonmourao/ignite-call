@@ -2,6 +2,8 @@ import { SessionProvider } from 'next-auth/react'
 import { globalStyles } from '../styles/global'
 import type { AppProps } from 'next/app'
 
+import '../lib/dayjs'
+
 import { Roboto } from 'next/font/google'
 
 const roboto = Roboto({
