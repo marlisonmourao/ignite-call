@@ -84,8 +84,6 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
       }),
     ]
 
-    console.log(calendarDays)
-
     const calendarWeeks = calendarDays.reduce<CalendarWeeks>(
       (weeks, _, i, original) => {
         const isNewWeek = i % 7 === 0
