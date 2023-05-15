@@ -69,7 +69,7 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
     const nextMonthFillArray = Array.from({
       length: 7 - (lastWeekDay + 1),
     }).map((_, i) => {
-      return currentDate.add(i + 1, 'day')
+      return currentDate.add(i, 'day')
     })
 
     const calendarDays = [
